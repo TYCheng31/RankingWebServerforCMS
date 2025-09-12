@@ -5,12 +5,15 @@ from process_data import process_data  # 引入你剛定義的函式
 
 app = Flask(__name__)
 
+# 設定靜態檔案的路徑，這樣可以讓 Flask 正確處理靜態檔案
+app.config['STATIC_FOLDER'] = '/home/kevin/Desktop/RankingWebServer/static'
+
 @app.route('/', methods=['GET'])
 def index():
     csv_data = None
 
     # 設定生成的 CSV 路徑
-    csv_full_path = os.path.join('/home/cms/my_flask_app/static', 'sorted_result.csv')
+    csv_full_path = os.path.join(app.config['STATIC_FOLDER'], 'sorted_result.csv')
 
     if os.path.exists(csv_full_path):
         with open(csv_full_path, 'r', encoding='utf-8-sig') as f:

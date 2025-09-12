@@ -3,11 +3,15 @@ import pandas as pd
 import csv
 from datetime import timedelta
 
+# 設定 CSV 檔案路徑
+CSV_PATH = "/home/kevin/Desktop/RankingWebServer/static/aggregated_output.csv"
+SORTED_RESULT_PATH = "/home/kevin/Desktop/RankingWebServer/static/sorted_result.csv"
+
 def process_data():
     # 連接資料庫
     conn = psycopg2.connect(
         dbname="cmsdb",
-        user="postgres",
+        user="cmsuser",
         password="0000",
         host="localhost",
         port="5432"
@@ -92,17 +96,17 @@ def process_data():
     # 合併相同使用者、考試名稱、題目名稱的資料
     df_grouped = df_sorted.groupby(["使用者", "考試名稱", "題目名稱"], as_index=False).first()
 
-    # 設定 CSV 檔案路徑
-    csv_path = "/home/cms/my_flask_app/static/aggregated_output.csv"
-
     # 開啟 CSV 檔案進行寫入
-    df_grouped.to_csv(csv_path, index=False, encoding="utf-8")
+    df_grouped.to_csv(CSV_PATH, index=False, encoding="utf-8")
     
-    print(f"整合後的 CSV 檔案已生成：{csv_path}")
+    print(f"整合後的 CSV 檔案已生成：{CSV_PATH}")
 
-    ###########################################################################################################################
+
+#Collect all datas in db and save in CSV_PATH
+#===================================================================================#
+
     # 讀取 CSV 檔案
-    data = pd.read_csv(csv_path)
+    data = pd.read_csv(CSV_PATH)
 
     # 處理時間欄位，將 "作答時間" 轉換為 timedelta 格式
     data['作答時間'] = pd.to_timedelta(data['作答時間'])
@@ -154,9 +158,9 @@ def process_data():
     )
 
     # 儲存排序後的結果
-    result_sorted.to_csv('/home/cms/my_flask_app/static/sorted_result.csv', index=False)
+    result_sorted.to_csv(SORTED_RESULT_PATH, index=False)
 
-    print("/home/cms/my_flask_app/static/sorted_result.csv 已生成")
+    print(f"{SORTED_RESULT_PATH} 已生成")
 
     # 關閉資料庫連接
     cur.close()
@@ -164,7 +168,3 @@ def process_data():
 
 # 呼叫處理函式
 process_data()
-<<<<<<< HEAD
-
-=======
->>>>>>> 77f00d80fa3684f76b819e55cf81c5a9ca097096
