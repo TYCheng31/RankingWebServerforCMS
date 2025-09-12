@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>CSV Viewer</title>
+    <style>
+        /* 隱藏表格中的欄位 */
+        .hidden {
+            display: none;
+        }
+
+
+    </style>
+    <script>
+        // 切換隱藏和顯示欄位
+        function toggleColumn(columnClass, button) {
+            var elements = document.querySelectorAll("." + columnClass);
+            elements.forEach(function(element) {
+                element.classList.toggle("hidden");
+            });
+
+            // 按鈕顯示變更
+            if (button.innerText === '顯示題目') {
+                button.innerText = '隱藏題目';
+            } else {
+                button.innerText = '顯示題目';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>考試結果</h1>
+    <form action="{{ url_for('run_script') }}" method="POST">
+        <button type="submit">取得結果</button>
+    </form>
+
+    <!-- 初始隱藏題目的按鈕，按下後切換顯示或隱藏 -->
+    <button id="toggleButton" class="show-column-button" onclick="toggleColumn('quiz-column', this)">顯示題目</button>
+
+    <!-- 判斷是否有 CSV 資料 -->
+    {% if csv_data %}
+        <table border="1">
+            <!-- 顯示表頭 -->
+            <tr>
+                {% for header in csv_data[0] %}
+                    <th class="{% if header in ['Quiz1Q1分數', 'Quiz1Q2分數', 'Quiz1Q3分數', 'Quiz1Q4分數', 'Quiz1Q5分數', 'Quiz1Q6分數'] %}quiz-column hidden{% endif %}">
+                        {{ header }}
+                    </th>
+                {% endfor %}
+            </tr>
+            <!-- 顯示資料內容 -->
+            {% for row in csv_data[1:] %}
+                <tr>
+                    {% for cell in row %}
+                        <td class="{% if csv_data[0][loop.index0] in ['Quiz1Q1分數', 'Quiz1Q2分數', 'Quiz1Q3分數', 'Quiz1Q4分數', 'Quiz1Q5分數', 'Quiz1Q6分數'] %}quiz-column hidden{% endif %}">
+                            {{ cell }}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>目前沒有可顯示的 CSV 資料</p>
+    {% endif %}
+</body>
+</html>
