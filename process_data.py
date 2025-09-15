@@ -4,7 +4,7 @@ import csv
 from datetime import timedelta
 
 # 設定 CSV 檔案路徑
-CSV_PATH = "/home/kevin/Desktop/RankingWebServer/static/aggregated_output.csv"
+CSV_PATH = "/home/kevin/Desktop/RankingWebServer/static/sorted_result.csv"
 SORTED_RESULT_PATH = "/home/kevin/Desktop/RankingWebServer/static/sorted_result.csv"
 
 def process_data():
@@ -20,6 +20,9 @@ def process_data():
 
     # 存每一筆繳交資料，包含使用者，考試名稱，開始時間，繳交時間，分數，題目名稱
     user_contest_scores = []
+    
+    # 存儲所有題目名稱的集合
+    task_names = set()
 
     # 查詢 submission_results 資料，根據 submission_id 獲得 score
     cur.execute("SELECT submission_id, score FROM submission_results")
@@ -41,6 +44,8 @@ def process_data():
             tasks_data = cur.fetchone()
             if tasks_data:
                 task_name = tasks_data[0]
+                # 將題目名稱加入集合
+                task_names.add(task_name)
 
             # 根據 participation_id 查詢 participations 資料，獲取 contest_id 和 user_id
             cur.execute("SELECT contest_id, user_id FROM participations WHERE id = %s", (participation_id,))
@@ -99,72 +104,16 @@ def process_data():
     # 開啟 CSV 檔案進行寫入
     df_grouped.to_csv(CSV_PATH, index=False, encoding="utf-8")
     
+    # 將 task_names 進行字母排序
+    sorted_task_names = sorted(task_names)
+
+    # 輸出所有題目名稱（排序後）
+    print("所有題目名稱（按字母排序）：", sorted_task_names)
+    
     print(f"整合後的 CSV 檔案已生成：{CSV_PATH}")
 
+    return sorted_task_names
 
-#Collect all datas in db and save in CSV_PATH
-#===================================================================================#
-
-    # 讀取 CSV 檔案
-    data = pd.read_csv(CSV_PATH)
-
-    # 處理時間欄位，將 "作答時間" 轉換為 timedelta 格式
-    data['作答時間'] = pd.to_timedelta(data['作答時間'])
-
-    # 依據每位使用者進行分組，並計算每一位使用者的各題分數總和
-    result = data.groupby('使用者').agg(
-        Quiz1Q1分數=('分數', lambda x: x[data['題目名稱'] == 'Quiz1Q1'].sum() if 'Quiz1Q1' in data['題目名稱'].values else 0),
-        Quiz1Q2分數=('分數', lambda x: x[data['題目名稱'] == 'Quiz1Q2'].sum() if 'Quiz1Q2' in data['題目名稱'].values else 0),
-        Quiz1Q3分數=('分數', lambda x: x[data['題目名稱'] == 'Quiz1Q3'].sum() if 'Quiz1Q3' in data['題目名稱'].values else 0),
-        Quiz1Q4分數=('分數', lambda x: x[data['題目名稱'] == 'Quiz1Q4'].sum() if 'Quiz1Q4' in data['題目名稱'].values else 0),
-        Quiz1Q5分數=('分數', lambda x: x[data['題目名稱'] == 'Quiz1Q5'].sum() if 'Quiz1Q5' in data['題目名稱'].values else 0),
-        Quiz1Q6分數=('分數', lambda x: x[data['題目名稱'] == 'Quiz1Q6'].sum() if 'Quiz1Q6' in data['題目名稱'].values else 0),
-        最晚作答時間=('作答時間', 'max')  # 這裡將最晚作答時間更新為作答時間中最晚的紀錄
-    ).reset_index()
-
-    # 計算總分
-    result['總分'] = result[['Quiz1Q1分數', 'Quiz1Q2分數', 'Quiz1Q3分數', 'Quiz1Q4分數', 'Quiz1Q5分數', 'Quiz1Q6分數']].sum(axis=1)
-
-    # 檢查是否有 20 分的題目，如果沒有，將作答時間設為 0
-    def check_for_20_and_update_time(user_data):
-        # 篩選出分數為 20 的題目
-        valid_data = user_data[user_data['分數'] == 20]
-        
-        if valid_data.empty:
-            # 如果沒有得到 20 分的題目，作答時間設為 0
-            return pd.Timedelta(0)
-        else:
-            # 否則，取作答時間最晚的紀錄
-            return valid_data['作答時間'].max()
-
-    # 使用 apply 來處理每位使用者的最晚繳交時間
-    result['最晚作答時間'] = result['使用者'].apply(lambda user: check_for_20_and_update_time(data[data['使用者'] == user]))
-
-    # 將 '總分' 欄位移動到 '使用者' 之後
-    cols = ['使用者', '總分', 'Quiz1Q1分數', 'Quiz1Q2分數', 'Quiz1Q3分數', 'Quiz1Q4分數', 'Quiz1Q5分數', 'Quiz1Q6分數', '最晚作答時間']
-    result = result[cols]
-
-    # 排名：依照總分、20分題數排序
-    def count_20_score_tasks(user_data):
-        return (user_data['分數'] == 20).sum()
-
-    # 使用 apply 計算得到 20 分的題目數量
-    result['得到20分題數'] = result['使用者'].apply(lambda user: count_20_score_tasks(data[data['使用者'] == user]))
-
-    # 根據多個條件進行排序
-    result_sorted = result.sort_values(
-        by=['總分', '得到20分題數'],
-        ascending=[False, False]  # 總分降序、得到 20 分的題數降序
-    )
-
-    # 儲存排序後的結果
-    result_sorted.to_csv(SORTED_RESULT_PATH, index=False)
-
-    print(f"{SORTED_RESULT_PATH} 已生成")
-
-    # 關閉資料庫連接
-    cur.close()
-    conn.close()
 
 # 呼叫處理函式
 process_data()

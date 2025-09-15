@@ -12,3 +12,8 @@ pip install pandas
 aggregated_output.csv有得分的繳交紀錄  
 final.csv是把同user整理在一起  
 sorted_result.csv是用排名依據去計算  
+
+---
+25/09/15
+v0.0.0
+* 
