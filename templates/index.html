@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RankingWebServer</title>
+    <title>Ranking Web Server</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #f4f7fa;
             margin: 0;
             padding: 0;
+            display: flex;
         }
 
         h1, h2 {
@@ -17,6 +17,68 @@
             color: #333;
         }
 
+        /* 側邊欄樣式，始終顯示 */
+        #sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: rgb(238, 242, 234);
+            padding-top: 30px;
+            transition: left .3s ease;
+            z-index: 1000;
+        }
+
+        #sidebarTitle {
+            padding: 8px 16px;
+            text-decoration: none;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: rgb(69, 114, 65);
+            display: block;
+            transition: 0.3s;
+        }
+
+        #sidebar p {
+            padding: 8px 16px;
+            text-decoration: none;
+            color: rgb(0, 0, 0);
+            display: block;
+            transition: 0.3s;
+        }
+
+        #sidebar a {
+            padding: 8px 16px;
+            text-decoration: none;
+            font-size: 1.2em;
+            color: rgb(130, 204, 123);
+            display: block;
+            transition: 0.3s;
+        }
+
+        #sidebar v {
+            position: absolute;
+            bottom: 50px;
+        }
+        #sidebar a:hover {
+            background-color: #ffffff;
+        }
+
+        /* 主內容區 */
+        #main {
+            flex-grow: 1;
+            margin-left: 250px;
+            padding: 20px;
+            transition: margin-left .3s ease;
+        }
+
+        /* 隱藏的內容區域 */
+        .contentSection {
+            display: none; /* 初始隱藏所有內容區 */
+        }
+
+        /* 表單樣式 */
         #taskForm {
             max-width: 600px;
             margin: 30px auto;
@@ -48,8 +110,8 @@
             width: 100%;
             padding: 10px;
             margin-top: 20px;
-            background-color: #0066cc;
-            color: #fff;
+            background-color: rgb(238, 242, 234);
+            color: #000000;
             border: none;
             border-radius: 5px;
             font-size: 1.1em;
@@ -57,7 +119,7 @@
         }
 
         button:hover {
-            background-color: #004d99;
+            background-color: rgb(198, 252, 144);
         }
 
         #csvContent {
@@ -93,67 +155,233 @@
             background-color: #f2f2f2;
         }
 
-        .hidden {
-            display: none;
+        /* 模態框樣式 */
+        .modal {
+            display: none; /* 默認隱藏 */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
         }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            text-align: center;
+        }
+
+        .modal-header {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            margin-top: 20px;
+        }
+        
+        
+
     </style>
 </head>
 <body>
-    <h1>Ranking Web Server</h1>
 
-    <form id="taskForm" action="{{ url_for('run_script') }}" method="POST">
-        <fieldset>
-            <legend>選擇題目</legend>
-            {% for task_name in task_names %}
-                <label>
-                    <input type="checkbox" name="task_names" value="{{ task_name }}" class="task-checkbox">
-                    {{ task_name }}
-                </label>
-            {% endfor %}
-        </fieldset>
-        <button type="submit">更新</button>
-    </form>
+    <!-- 側邊欄 -->
+    <div id="sidebar">
+        <div id="sidebarTitle">Ranking Web Server</div>
+        <p>Last updated:</p>
+        <p><strong>{{ last_updated_time }}</strong></p>
+        <a href="#" id="toggleFormButton">Select Tasks</a>
+        <a href="#" id="dashboardButton">Ranking</a>
+        <a href="#">Update Time</a>
+        <a id="exportButton">Export Full CSV</a>
+        <v>v0.2.0</v>
+    </div>
 
-    <div id="csvContent">
-        {% if csv_data %}
-            <table border="1" id="csvTable">
-                <!-- 顯示表頭 -->
-                <tr>
-                    {% for header in csv_data[0] %}
-                        <th>{{ header }}</th>
+    <!-- 主要內容區 -->
+    <div id="main">
+        <!-- 顯示 Select Tasks 按鈕 -->
+        <div id="taskForm" class="contentSection">
+            <form action="{{ url_for('run_script') }}" method="POST">
+                <fieldset>
+                    <legend>Select Tasks</legend>
+                    {% for task_name in task_names %}
+                        <label>
+                            <input type="checkbox" name="task_names" value="{{ task_name }}" class="task-checkbox">
+                            {{ task_name }}
+                        </label>
                     {% endfor %}
-                </tr>
-                <!-- 顯示資料內容 -->
-                {% for row in csv_data[1:] %}
-                    <tr class="csvRow">
-                        {% for cell in row %}
-                            <td>{{ cell }}</td>
+                </fieldset>
+            </form>
+        </div>
+
+        <!-- 顯示 CSV 資料 -->
+        <div id="csvContent" class="contentSection">
+            {% if csv_data %}
+                <table border="1" id="csvTable">
+                    <tr>
+                        {% for header in csv_data[0] %}
+                            <th>{{ header }}</th>
                         {% endfor %}
                     </tr>
-                {% endfor %}
-            </table>
-        {% else %}
-            <p>目前沒有可顯示的 CSV 資料</p>
-        {% endif %}
+                    {% for row in csv_data[1:] %}
+                        <tr class="csvRow">
+                            {% for cell in row %}
+                                <td>{{ cell }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>目前沒有可顯示的 CSV 資料</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 模態框 -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Download Confirm</div>
+            <p>Select Tasks：</p>
+            <ul id="selectedTasksList"></ul>
+            <div class="modal-footer">
+                <button id="confirmDownloadButton">Confirm</button>
+                <button id="cancelDownloadButton">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        document.querySelectorAll('.task-checkbox').forEach(function(checkbox) {
-            checkbox.addEventListener('change', function() {
-                const selectedTasks = Array.from(document.querySelectorAll('.task-checkbox:checked'))
-                                            .map(checkbox => checkbox.value);
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleFormButton = document.getElementById('toggleFormButton');
+            const taskForm = document.getElementById('taskForm');
+            const csvContent = document.getElementById('csvContent');
+            const dashboardButton = document.getElementById('dashboardButton');
+            const exportBtn = document.getElementById('exportButton');
+            const confirmationModal = document.getElementById('confirmationModal');
+            const selectedTasksList = document.getElementById('selectedTasksList');
+            const confirmDownloadButton = document.getElementById('confirmDownloadButton');
+            const cancelDownloadButton = document.getElementById('cancelDownloadButton');
 
+            // 顯示/隱藏內容區域
+            const setSectionVisible = (sectionToShow) => {
+                const contentSections = document.querySelectorAll('.contentSection');
+                contentSections.forEach(section => {
+                    section.style.display = (section === sectionToShow) ? 'block' : 'none';
+                });
+            };
+
+            // 從 localStorage 獲取當前顯示的頁面
+            const currentPage = localStorage.getItem('currentPage') || 'taskForm';
+
+            // 初始設定，顯示上次的頁面
+            if (currentPage === 'taskForm') {
+                setSectionVisible(taskForm);
+            } else if (currentPage === 'csvContent') {
+                setSectionVisible(csvContent);
+            }
+
+            // 點擊 Select Tasks 按鈕顯示表單
+            toggleFormButton?.addEventListener('click', (e) => {
+                e.preventDefault();
+                setSectionVisible(taskForm);
+                localStorage.setItem('currentPage', 'taskForm');
+            });
+
+            // 點擊 Dashboard 按鈕顯示 CSV 資料
+            dashboardButton?.addEventListener('click', (e) => {
+                e.preventDefault();
+                setSectionVisible(csvContent);
+                localStorage.setItem('currentPage', 'csvContent');
+            });
+
+            // 當勾選框變動時，保存選擇並篩選資料
+            const saveSelectedTasks = () => {
+                const selectedTasks = Array.from(document.querySelectorAll('.task-checkbox:checked')).map(cb => cb.value);
+                localStorage.setItem('selectedTasks', JSON.stringify(selectedTasks));
+                return selectedTasks;
+            };
+
+            const filterRows = (selectedTasks) => {
                 const rows = document.querySelectorAll('.csvRow');
                 rows.forEach(row => {
-                    const taskName = row.cells[2].innerText; // 假設第一列是題目名稱
-                    if (selectedTasks.length === 0 || selectedTasks.includes(taskName)) {
-                        row.style.display = ''; // 顯示符合條件的行
-                    } else {
-                        row.style.display = 'none'; // 隱藏不符合條件的行
-                    }
+                    const taskName = row.cells[2]?.innerText || ''; // 假設 CSV 的第三列是任務名稱
+                    row.style.display = (selectedTasks.length === 0 || selectedTasks.includes(taskName)) ? '' : 'none';
+                });
+            };
+
+            const loadSelectedTasks = () => {
+                const saved = JSON.parse(localStorage.getItem('selectedTasks') || '[]');
+                document.querySelectorAll('.task-checkbox').forEach(cb => cb.checked = saved.includes(cb.value));
+                filterRows(saved);
+            };
+
+            // 點擊 Export CSV 按鈕
+            exportBtn?.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                // 取得勾選的題目
+                const selectedTasks = saveSelectedTasks();
+                if (selectedTasks.length > 0) {
+                    // 顯示模態框並列出選中的題目
+                    selectedTasksList.innerHTML = selectedTasks.map(task => `<li>${task}</li>`).join('');
+                    confirmationModal.style.display = 'flex';
+                } else {
+                    alert("Select a Tasks!");
+                }
+            });
+
+            // 確認下載
+            confirmDownloadButton?.addEventListener('click', () => {
+                const rows = Array.from(document.querySelectorAll('.csvRow')).filter(r => r.style.display !== 'none');
+                const table = document.getElementById('csvTable');
+                if (!table) return;
+
+                const headers = Array.from(table.querySelectorAll('th')).map(th => th.innerText);
+                const csvRows = [headers.join(',')];
+                rows.forEach(row => {
+                    const rowData = Array.from(row.querySelectorAll('td')).map(td => {
+                        const text = td.innerText.replace(/"/g, '""');
+                        return /[",\n]/.test(text) ? `"${text}"` : text;
+                    });
+                    csvRows.push(rowData.join(','));
+                });
+
+                const csvContent = csvRows.join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'filtered_data.csv';
+                link.click();
+
+                // 關閉模態框
+                confirmationModal.style.display = 'none';
+            });
+
+            // 取消下載
+            cancelDownloadButton?.addEventListener('click', () => {
+                confirmationModal.style.display = 'none';
+            });
+
+            // 初始化已選任務並過濾資料
+            loadSelectedTasks();
+
+            // 當勾選框變動時，保存選擇並篩選資料
+            document.querySelectorAll('.task-checkbox').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    const selected = Array.from(document.querySelectorAll('.task-checkbox:checked')).map(cb => cb.value);
+                    saveSelectedTasks();
+                    filterRows(selected);
                 });
             });
         });
     </script>
+
 </body>
 </html>
