@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleFormButton = document.getElementById('toggleFormButton');
     const taskForm = document.getElementById('taskForm');
     const csvContent = document.getElementById('csvContent');
+    const csvContent2 = document.getElementById('csvContent2');
     const dashboardButton = document.getElementById('dashboardButton');
     const rankingButton = document.getElementById('rankingButton');
     const exportBtn = document.getElementById('exportButton');
@@ -49,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     rankingButton?.addEventListener('click', (e) => {
         e.preventDefault();
-        setSectionVisible(csvContent);
+        setSectionVisible(csvContent2);
         localStorage.setItem('currentPage', 'csvContent');
     });
 

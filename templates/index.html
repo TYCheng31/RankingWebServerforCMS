@@ -1,92 +1,111 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ranking Web Server</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
     <script src="{{ url_for('static', filename='js/scripts.js') }}" defer></script>
-</head>
-<body>
-
+  </head>
+  <body>
     <!-- 側邊欄 -->
     <div id="sidebar">
-        <div id="sidebarTitle">Ranking Web Server</div>
-        <p>Last updated:</p>
-        <p><strong>{{ last_updated_time }}</strong></p>
-        <a href="#" id="toggleFormButton">Select Tasks</a>
-        <a href="#" id="dashboardButton">Ranking (for confirm)</a>
-        <a href="#" id="rankingButton">Ranking</a>
-        <a href="#" id="updateTimeButton">Update Time</a>
-        <a id="exportButton">Export Full CSV</a>
-        <v>v0.2.0</v>
+      <div id="sidebarTitle">Ranking Web Server</div>
+      <p>Last updated:</p>
+      <p><strong>{{ last_updated_time }}</strong></p>
+      <a href="#" id="toggleFormButton">Select Tasks</a>
+      <a href="#" id="dashboardButton">Ranking (for confirm)</a>
+      <a href="#" id="rankingButton">Ranking</a>
+      <a href="#" id="updateTimeButton">Update Time</a>
+      <a id="exportButton">Export Full CSV</a>
+      <v>v1.3.0</v>
     </div>
-
     <!-- 主要內容區 -->
     <div id="main">
-        <!-- 顯示 Select Tasks 按鈕 -->
-        <div id="taskForm" class="contentSection">
-            <form action="{{ url_for('run_script') }}" method="POST">
-                <fieldset>
-                    <legend>Select Tasks</legend>
-                    {% for task_name in task_names %}
-                        <label>
-                            <input type="checkbox" name="task_names" value="{{ task_name }}" class="task-checkbox">
-                            {{ task_name }}
-                        </label>
-                    {% endfor %}
-                </fieldset>
-            </form>
-        </div>
+      <!-- 顯示 Select Tasks 按鈕 -->
+      <div id="taskForm" class="contentSection">
+        <form action="{{ url_for('index') }}" method="POST">
+          <!-- 確保表單提交到 'index' 路由 -->
+          <fieldset>
+            <legend>Select Tasks</legend>
+            {% for task_name in task_names %}
+              <label>
+                <input type="checkbox" name="task_names" value="{{ task_name }}" class="task-checkbox" />
+                {{ task_name }}
+              </label>
+            {% endfor %}
+          </fieldset>
+          <button type="submit">Submit Selected Tasks</button>
+          <!-- 添加提交按鈕 -->
+        </form>
+      </div>
+      <!-- 顯示 CSV 資料 -->
+      <div id="csvContent" class="contentSection">
+        {% if csv_data %}
+          <table border="1" id="csvTable">
+            <tr>
+              {% for header in csv_data[0] %}
+                <th>{{ header }}</th>
+              {% endfor %}
+            </tr>
+            {% for row in csv_data[1:] %}
+              <tr class="csvRow">
+                {% for cell in row %}
+                  <td>{{ cell }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </table>
+        {% else %}
+          <p>目前沒有可顯示的 CSV 資料</p>
+        {% endif %}
+      </div>
 
-        <!-- 顯示 CSV 資料 -->
-        <div id="csvContent" class="contentSection">
-            {% if csv_data %}
-                <table border="1" id="csvTable">
-                    <tr>
-                        {% for header in csv_data[0] %}
-                            <th>{{ header }}</th>
-                        {% endfor %}
-                    </tr>
-                    {% for row in csv_data[1:] %}
-                        <tr class="csvRow">
-                            {% for cell in row %}
-                                <td>{{ cell }}</td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-                </table>
-            {% else %}
-                <p>目前沒有可顯示的 CSV 資料</p>
-            {% endif %}
-        </div>
-        
+      <div id="csvContent2" class="contentSection">
+        {% if finalcsv_data %}
+          <table border="1" id="finalcsvTable">
+            <tr>
+              {% for header in finalcsv_data[0] %}
+                <th>{{ header }}</th>
+              {% endfor %}
+            </tr>
+            {% for row in finalcsv_data[1:] %}
+              <tr>
+                {% for cell in row %}
+                  <td>{{ cell }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </table>
+        {% else %}
+          <p>目前沒有可顯示的 final.csv 資料</p>
+        {% endif %}
+      </div>
     </div>
 
     <!-- 模態框 - 設定自動刷新時間 -->
     <div id="updateTimeModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">Data Update Time (s)</div>
-            <input type="number" id="refreshInterval" min="1">
-            <div class="modal-footer">
-                <button id="setAutoRefreshButton">Set</button>
-                <button id="cancelAutoRefreshButton">Cancel</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">Data Update Time (s)</div>
+        <input type="number" id="refreshInterval" min="1" />
+        <div class="modal-footer">
+          <button id="setAutoRefreshButton">Set</button>
+          <button id="cancelAutoRefreshButton">Cancel</button>
         </div>
+      </div>
     </div>
 
     <!-- 確認下載的模態框 -->
     <div id="confirmationModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">Download Confirm</div>
-            <p>Select Tasks：</p>
-            <ul id="selectedTasksList"></ul>
-            <div class="modal-footer">
-                <button id="confirmDownloadButton">Download</button>
-                <button id="cancelDownloadButton">Cancel</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">Download Confirm</div>
+        <p>Select Tasks：</p>
+        <ul id="selectedTasksList"></ul>
+        <div class="modal-footer">
+          <button id="confirmDownloadButton">Download</button>
+          <button id="cancelDownloadButton">Cancel</button>
         </div>
+      </div>
     </div>
-
-</body>
+  </body>
 </html>

@@ -18,10 +18,10 @@ def process_data():
     )
     cur = conn.cursor()
 
-    # 存每一筆繳交資料，包含使用者，考試名稱，開始時間，繳交時間，分數，題目名稱
+    # 存每一筆繳交資料，包含User，Contest Name，Start Time，Submit Time， Score，Task Name
     user_contest_scores = []
     
-    # 存儲所有題目名稱的集合
+    # 存儲所有Task Name的集合
     task_names = set()
 
     # 查詢 submission_results 資料，根據 submission_id 獲得 score
@@ -44,7 +44,7 @@ def process_data():
             tasks_data = cur.fetchone()
             if tasks_data:
                 task_name = tasks_data[0]
-                # 將題目名稱加入集合
+                # 將Task Name加入集合
                 task_names.add(task_name)
 
             # 根據 participation_id 查詢 participations 資料，獲取 contest_id 和 user_id
@@ -72,7 +72,7 @@ def process_data():
                 else:
                     first_name = "Unknown"
 
-                # 計算作答時間（繳交時間 - 開始時間）
+                # 計算Answer Time（Submit Time - Start Time）
                 if contest_start != "Unknown":
                     contest_start = contest_start.replace(tzinfo=None)  # 去除時區資訊
                     answer_time = timestamp - contest_start
@@ -80,26 +80,26 @@ def process_data():
 
                 # 準備記錄每次提交的資訊
                 user_contest_scores.append({
-                    "使用者": first_name,
-                    "考試名稱": contest_name,
-                    "開始時間": contest_start.strftime("%Y-%m-%d %H:%M:%S") if contest_start != "Unknown" else contest_start,
-                    "繳交時間": timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-                    "作答時間": answer_time_str,
-                    "分數": score,
-                    "題目名稱": task_name,
+                    "User": first_name,
+                    "Contest Name": contest_name,
+                    "Start Time": contest_start.strftime("%Y-%m-%d %H:%M:%S") if contest_start != "Unknown" else contest_start,
+                    "Submit Time": timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                    "Answer Time": answer_time_str,
+                    "Score": score,
+                    "Task Name": task_name,
                 })
 
     # 使用 pandas 將結果轉換為 DataFrame
     df = pd.DataFrame(user_contest_scores)
 
-    # 過濾掉分數為 0 的資料
-    df_filtered = df[df["分數"] != 0]
+    # 過濾掉 Score為 0 的資料
+    df_filtered = df[df["Score"] != 0]
 
-    # 先排序資料，先依使用者、考試名稱、題目名稱分組，再按照分數降序排列，若分數相同則按照繳交時間升序排列
-    df_sorted = df_filtered.sort_values(by=["使用者", "考試名稱", "題目名稱", "分數", "繳交時間"], ascending=[True, True, True, False, True])
+    # 先排序資料，先依User、Contest Name、Task Name分組，再按照 Score降序排列，若 Score相同則按照Submit Time升序排列
+    df_sorted = df_filtered.sort_values(by=["User", "Contest Name", "Task Name", "Score", "Submit Time"], ascending=[True, True, True, False, True])
 
-    # 合併相同使用者、考試名稱、題目名稱的資料
-    df_grouped = df_sorted.groupby(["使用者", "考試名稱", "題目名稱"], as_index=False).first()
+    # 合併相同User、Contest Name、Task Name的資料
+    df_grouped = df_sorted.groupby(["User", "Contest Name", "Task Name"], as_index=False).first()
 
     # 開啟 CSV 檔案進行寫入
     df_grouped.to_csv(CSV_PATH, index=False, encoding="utf-8")
@@ -107,8 +107,8 @@ def process_data():
     # 將 task_names 進行字母排序
     sorted_task_names = sorted(task_names)
 
-    # 輸出所有題目名稱（排序後）
-    print("所有題目名稱（按字母排序）：", sorted_task_names)
+    # 輸出所有Task Name（排序後）
+    print("所有Task Name（按字母排序）：", sorted_task_names)
     
     print(f"整合後的 CSV 檔案已生成：{CSV_PATH}")
 
