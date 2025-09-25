@@ -16,6 +16,7 @@ source RWSVenv/bin/activate
 pip install flask
 pip install psycopg2
 pip install pandas
+pip3 install openpyxl
 ```
 
 - Execute Ranking Web Server
