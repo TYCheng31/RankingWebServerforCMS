@@ -1,4 +1,4 @@
-# External Ranking Web Server For CMS
+# External Ranking Web Server for CMS
 
 ## How to install?
 
