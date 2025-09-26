@@ -10,7 +10,7 @@ import subprocess
 app = Flask(__name__)
 
 # 設定靜態檔案的路徑，這樣可以讓 Flask 正確處理靜態檔案
-app.config['STATIC_FOLDER'] = '/home/kevin/Desktop/RankingWebServer/static'
+app.config['STATIC_FOLDER'] = './static'
 
 @app.route('/', methods=['GET', 'POST'])
 def index():

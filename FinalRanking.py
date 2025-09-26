@@ -50,6 +50,6 @@ result_sorted = result2.sort_values(
 
 
 # 儲存排序後的結果
-result_sorted.to_csv('static/final.csv', index=False)
+result_sorted.to_csv('./static/final.csv', index=False)
 
 print("/static/final.csv已生成")

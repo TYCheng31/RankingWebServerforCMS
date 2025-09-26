@@ -4,8 +4,8 @@ import csv
 from datetime import timedelta
 
 # 設定 CSV 檔案路徑
-CSV_PATH = "/home/kevin/Desktop/RankingWebServer/static/sorted_result.csv"
-SORTED_RESULT_PATH = "/home/kevin/Desktop/RankingWebServer/static/sorted_result.csv"
+CSV_PATH = "./static/sorted_result.csv"
+SORTED_RESULT_PATH = "./static/sorted_result.csv"
 
 def process_data():
     # 連接資料庫
