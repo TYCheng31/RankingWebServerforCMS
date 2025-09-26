@@ -8,20 +8,28 @@
 git clone https://github.com/TYCheng31/RankingWebServer.git
 ```
 
-- Use python venv to install all packages
+- install python venv
 
 ```bash
+sudo apt update
+sudo apt install python3.10-venv
 python3 -m venv RWSVenv
 source RWSVenv/bin/activate
+```
+
+- install other packages
+
+```bash
 pip install flask
 pip install psycopg2
 pip install pandas
-pip3 install openpyxl
+pip install openpyxl
 ```
 
 - Execute Ranking Web Server
 
 ```bash
+cd RankingWebServer
 python3 app.py
 ```
 
