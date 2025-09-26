@@ -5,7 +5,7 @@
 - Get the main file
 
 ```bash
-git clone https://github.com/TYCheng31/RankingWebServer.git
+git clone https://github.com/TYCheng31/RankingWebServerforCMS.git
 ```
 
 - install python venv
